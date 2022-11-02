@@ -52,4 +52,6 @@ npm run build
 
 The command above outputs the deployable files to a "dist" folder. Deploy all the files inside the "dist" folder to your web server.
 
+> 💡Tip: If you want an easy solution for hosting these demos, [AWS Amplify](https://aws.amazon.com/amplify) provides a simple drag-and-drop interface for hosting static web applications.
+
 Congratulations! The demos are now accessible to anyone who can access that web server. 🎉
