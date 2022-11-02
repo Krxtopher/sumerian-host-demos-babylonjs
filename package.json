@@ -1,0 +1,38 @@
+{
+  "name": "demos-babylon",
+  "version": "2.0.4",
+  "description": "Demos of the Babylon version of the Amazon Sumerian Hosts JS library",
+  "private": true,
+  "scripts": {
+    "test": "",
+    "start": "webpack serve",
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Amazon Web Services",
+    "url": "https://aws.amazon.com",
+    "organization": true
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@babylonjs/core": "^4.2.1",
+    "@babylonjs/loaders": "^4.2.1",
+    "@babylonjs/materials": "^4.2.1",
+    "@amazon-sumerian-hosts/babylon": "^2.0.4"
+  },
+  "devDependencies": {
+    "eslint": "^8.13.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsx-a11y": "^6.5.1",
+    "eslint-plugin-react": "^7.29.4",
+    "eslint-plugin-react-hooks": "^4.4.0",
+    "webpack-cli": "^4.9.2",
+    "webpack": "^5.71.0",
+    "webpack-dev-server": "^4.7.4",
+    "copy-webpack-plugin": "^10.2.4"
+  }
+}
