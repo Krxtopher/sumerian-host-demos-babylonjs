@@ -8,7 +8,7 @@ Before you can run the demos, you will need to set up a few thing in your AWS ac
 
 ## Local Environment Setup
 
-In a terminal on your local machine, navigate to the repository root directory and run (if you haven't already)...
+In a terminal on your local machine, navigate to the repository root directory and run...
 
 ```
 npm install
