@@ -11,6 +11,5 @@ npm-debug.log
 build
 build/
 docs/
-demo-credentials.js
 **/dist/
 .hot-reload/
