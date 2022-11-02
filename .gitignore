@@ -10,6 +10,5 @@ npm-debug.log
 .gitconfig
 build
 build/
-docs/
 **/dist/
 .hot-reload/

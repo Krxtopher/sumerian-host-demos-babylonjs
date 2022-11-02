@@ -2,6 +2,8 @@
 
 This directory contains a number of demonstrations, each focused on a different feature of the Hosts API.
 
+![Amazon Sumerian Host characters](./docs/images/hosts_cover.jpg)
+
 ## Prerequisites
 
 Before you can run the demos, you will need to set up a few thing in your AWS account. For step-by-step instructions on setting up this required infrastructure, see [AWS-Infrastructure-Setup.md](AWS-Infrastructure-Setup.md).
