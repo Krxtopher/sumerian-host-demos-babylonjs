@@ -44,7 +44,7 @@ When you're finished with the demos, you can quit the local dev server by pressi
 
 ## Deploying the Demos to a Web Server
 
-If you'd like to deploy the demos to a web server so that others can access them follow these steps...
+If you'd like to deploy the demos to a web server so that others can access them follow the steps below.
 
 Run the following command which will build a deployable version of the web application.
 
@@ -54,6 +54,8 @@ npm run build
 
 The command above outputs the deployable files to a "dist" folder. Deploy all the files inside the "dist" folder to your web server.
 
-> 💡Tip: If you want an easy solution for hosting these demos, [AWS Amplify](https://aws.amazon.com/amplify) provides a simple drag-and-drop interface for hosting static web applications.
+> ⚠️ **Important:** The "Chatbot Demo" requires access to the user's microphone for voice input. Browsers will only allow microphone access for websites hosted securely with SSL (over https://). Be sure your web server is configued to use SSL if you plan to use the "Chatbot Demo".
+
+> 💡**Tip:** If you want an easy solution for hosting these demos, [AWS Amplify](https://aws.amazon.com/amplify) provides a simple drag-and-drop interface for hosting static web applications.
 
 Congratulations! The demos are now accessible to anyone who can access that web server. 🎉
