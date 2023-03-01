@@ -2,6 +2,7 @@ import { HostObject, aws as AwsFeatures } from "@amazon-sumerian-hosts/babylon";
 import { Scene } from "@babylonjs/core/scene";
 import DemoUtils from "./demo-utils";
 import { cognitoIdentityPoolId } from "./demo-credentials.js";
+import { LexV2Feature } from "./extras/LexV2Feature";
 
 let host;
 let scene;
@@ -26,8 +27,8 @@ async function createScene() {
   // Edit the characterId if you would like to use one of
   // the other pre-built host characters. Available character IDs are:
   // "Cristine", "Fiona", "Grace", "Maya", "Jay", "Luke", "Preston", "Wes"
-  const characterId = "Luke";
-  const pollyConfig = { pollyVoice: "Matthew", pollyEngine: "neural" };
+  const characterId = "Fiona";
+  const pollyConfig = { pollyVoice: "Joanna", pollyEngine: "neural" };
   const characterConfig = HostObject.getCharacterConfig(
     "./assets/character-assets",
     characterId
@@ -42,14 +43,15 @@ async function createScene() {
     shadowGenerator.addShadowCaster(mesh);
   });
 
-  // Initialize chatbot access. If you'd like to use this demo with a different chatbot, just change the
-  // botName and botAlias values below.
-  const lexClient = new AWS.LexRuntime();
+  // Initialize chatbot access. IMPORTANT: Update the botId, botAliasId,
+  // and localeId values below to match your chatbot!
+  const lexClient = new AWS.LexRuntimeV2();
   const botConfig = {
-    botName: "BookTrip",
-    botAlias: "Dev",
+    botId: "KPHJPZUJU1", // update this value
+    botAliasId: "KJTSJZZJ1E", // update this value
+    localeId: "en_US", // update this value
   };
-  lex = new AwsFeatures.LexFeature(lexClient, botConfig);
+  lex = new LexV2Feature(lexClient, botConfig);
 
   initUi();
   initConversationManagement();
@@ -90,12 +92,18 @@ function initConversationManagement() {
   talkButton.onmouseup = () => lex.endVoiceRecording();
 
   // Use events dispatched by the LexFeature to present helpful user messages.
-  const { EVENTS } = AwsFeatures.LexFeature;
+  const { EVENTS } = LexV2Feature;
   lex.listenTo(EVENTS.lexResponseReady, (response) =>
     handleLexResponse(response)
   );
   lex.listenTo(EVENTS.recordBegin, () => hideUserMessages());
   lex.listenTo(EVENTS.recordEnd, () => displayProcessingMessage());
+
+  // Handle Lex errors
+  lex.listenTo(EVENTS.lexError, (error) => {
+    // Implement your own error handling here.
+    console.error("The demo encountered a Lex error:", error);
+  });
 
   // Create convenience references to DOM elements.
   messageContainerEl = document.getElementById("userMessageContainer");
@@ -117,9 +125,12 @@ function handleLexResponse(response) {
   displaySpeechInputTranscript(response.inputTranscript);
 
   // Have the host speak the response from Lex if one was provided.
-  if (response.message) {
-    host.TextToSpeechFeature.play(response.message);
-  } else if (response.dialogState === "ReadyForFulfillment") {
+  const isIntentConfirmed =
+    response.sessionState.intent.confirmationState === "Confirmed";
+  if (response.messages) {
+    const messageContent = response.messages[0].content;
+    host.TextToSpeechFeature.play(messageContent);
+  } else if (isIntentConfirmed) {
     host.TextToSpeechFeature.play(
       "OK. Your reservation is complete. Have a great day."
     );
