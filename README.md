@@ -35,7 +35,7 @@ In a terminal, navigate to repository root directory.
 Start the demo server by running...
 
 ```
-npm run start-babylon
+npm run start
 ```
 
 This starts a local web server and launches two new browser tabs. The tab that will have focus will be titled **"BabylonJS Sumerian Host Demos"**. Click on any demo to give it a try.
