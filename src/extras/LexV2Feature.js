@@ -1,20 +1,11 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
+import { Engine } from "@babylonjs/core/Engines/engine";
 import { Messenger, Utils } from "@amazon-sumerian-hosts/babylon";
 import { downsampleAudio, encodeWAV } from "./AudioUtils";
 import pako from "pako";
 
 const INPUT_AUDIO_SAMPLE_RATE = 16000;
-
-/**
- * The list of event types emitted by the LexV2Feature.
- */
-const EVENTS = {
-  lexResponseReady: "lexResponseReady",
-  micReady: "micReady",
-  recordBegin: "recordBegin",
-  recordEnd: "recordEnd",
-};
 
 /**
  * Feature class for interacting with Lex V2 chatbots.
@@ -124,8 +115,23 @@ class LexV2Feature extends Messenger {
       .promise()
       .then((response) => {
         const decodedResponse = decodeResponse(response);
-        this.emit(EVENTS.lexResponseReady, decodedResponse);
+        this.emit(LexV2Feature.EVENTS.lexResponseReady, decodedResponse);
         return response;
+      })
+      .catch((error) => {
+        if (error.name === "ResourceNotFoundException") {
+          console.error(
+            `A LexV2 bot matching the following configuration was not found. Please check your configuration.
+{
+  botId: ${this._options.botId},
+  botAliasId: ${this._options.botAliasId},
+  localeId: ${this._options.localeId},
+}`
+          );
+        } else {
+          console.error(error);
+        }
+        this.emit(LexV2Feature.EVENTS.lexError, error);
       });
   }
 
@@ -171,7 +177,7 @@ class LexV2Feature extends Messenger {
     source.connect(node);
     node.connect(this._audioContext.destination);
 
-    this.emit(EVENTS.micReady);
+    this.emit(LexV2Feature.EVENTS.micReady);
     this._micReady = true;
   }
 
@@ -194,7 +200,7 @@ class LexV2Feature extends Messenger {
     this._recBuffer = [];
     this._recording = true;
 
-    this.emit(EVENTS.recordBegin);
+    this.emit(LexV2Feature.EVENTS.recordBegin);
   }
 
   /**
@@ -217,7 +223,7 @@ class LexV2Feature extends Messenger {
       offset += this._recBuffer[i].length;
     }
 
-    this.emit(EVENTS.recordEnd);
+    this.emit(LexV2Feature.EVENTS.recordEnd);
     return this._processWithAudio(result, this._audioContext.sampleRate);
   }
 
@@ -226,9 +232,21 @@ class LexV2Feature extends Messenger {
    * @returns The useragent string for the engine you are using, e.g. 'babylonjs/5.1.0'
    */
   getEngineUserAgentString() {
-    return "UnknownEngine";
+    return Engine.NpmPackage;
   }
 }
+
+Object.defineProperties(LexV2Feature, {
+  EVENTS: {
+    value: {
+      lexResponseReady: "lexResponseReady",
+      lexError: "lexError",
+      micReady: "micReady",
+      recordBegin: "recordBegin",
+      recordEnd: "recordEnd",
+    },
+  },
+});
 
 /**
  * Returns a copy of the Lex response, decoding any compressed values. The
