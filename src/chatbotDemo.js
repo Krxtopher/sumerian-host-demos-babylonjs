@@ -1,7 +1,8 @@
-import { HostObject, aws as AwsFeatures } from '@amazon-sumerian-hosts/babylon';
-import { Scene } from '@babylonjs/core/scene';
-import DemoUtils from './demo-utils';
-import { cognitoIdentityPoolId } from './demo-credentials.js'
+import { HostObject, aws as AwsFeatures } from "@amazon-sumerian-hosts/babylon";
+import { Scene } from "@babylonjs/core/scene";
+import DemoUtils from "./demo-utils";
+import { cognitoIdentityPoolId } from "./demo-credentials.js";
+import { LexV2Feature } from "./extras/LexV2Feature";
 
 let host;
 let scene;
@@ -16,7 +17,7 @@ async function createScene() {
 
   // ===== Configure the AWS SDK =====
 
-  AWS.config.region = cognitoIdentityPoolId.split(':')[0];
+  AWS.config.region = cognitoIdentityPoolId.split(":")[0];
   AWS.config.credentials = new AWS.CognitoIdentityCredentials({
     IdentityPoolId: cognitoIdentityPoolId,
   });
@@ -26,10 +27,10 @@ async function createScene() {
   // Edit the characterId if you would like to use one of
   // the other pre-built host characters. Available character IDs are:
   // "Cristine", "Fiona", "Grace", "Maya", "Jay", "Luke", "Preston", "Wes"
-  const characterId = 'Luke';
-  const pollyConfig = { pollyVoice: 'Matthew', pollyEngine: 'neural' };
+  const characterId = "Luke";
+  const pollyConfig = { pollyVoice: "Matthew", pollyEngine: "neural" };
   const characterConfig = HostObject.getCharacterConfig(
-    './assets/character-assets',
+    "./assets/character-assets",
     characterId
   );
   host = await HostObject.createHost(scene, characterConfig, pollyConfig);
@@ -38,18 +39,19 @@ async function createScene() {
   host.PointOfInterestFeature.setTarget(scene.activeCamera);
 
   // Enable shadows.
-  scene.meshes.forEach(mesh => {
+  scene.meshes.forEach((mesh) => {
     shadowGenerator.addShadowCaster(mesh);
   });
 
   // Initialize chatbot access. If you'd like to use this demo with a different chatbot, just change the
   // botName and botAlias values below.
-  const lexClient = new AWS.LexRuntime();
+  const lexClient = new AWS.LexRuntimeV2({ region: "us-west-2" });
   const botConfig = {
-    botName: 'BookTrip',
-    botAlias: 'Dev',
+    botId: "KPHJPZUJU1",
+    botAliasId: "KJTSJZZJ1E",
+    localeId: "en_US",
   };
-  lex = new AwsFeatures.LexFeature(lexClient, botConfig);
+  lex = new LexV2Feature(lexClient, botConfig);
 
   initUi();
   initConversationManagement();
@@ -60,8 +62,8 @@ async function createScene() {
 
 function initUi() {
   // Set up interactions for UI buttons.
-  document.getElementById('startButton').onclick = () => startMainExperience();
-  document.getElementById('enableMicButton').onclick = () =>
+  document.getElementById("startButton").onclick = () => startMainExperience();
+  document.getElementById("enableMicButton").onclick = () =>
     acquireMicrophoneAccess();
 }
 
@@ -69,12 +71,13 @@ function initUi() {
  * Triggered when the user clicks the initial "start" button.
  */
 function startMainExperience() {
-  showUiScreen('chatbotUiScreen');
+  showUiScreen("chatbotUiScreen");
 
   // Speak a greeting to the user.
-  host.TextToSpeechFeature.play(
-    `Hello. How can I help?  You can say things like, "I'd like to rent a car," or, "Help me book a hotel".`
-  );
+  host.TextToSpeechFeature.play(`Hello`);
+  // host.TextToSpeechFeature.play(
+  //   `Hello. How can I help?  You can say things like, "I'd like to rent a car," or, "Help me book a hotel".`
+  // );
 }
 
 // ===== Chatbot functions =====
@@ -85,21 +88,21 @@ let lex;
 
 function initConversationManagement() {
   // Use talk button events to start and stop recording.
-  const talkButton = document.getElementById('talkButton');
+  const talkButton = document.getElementById("talkButton");
   talkButton.onmousedown = () => lex.beginVoiceRecording();
   talkButton.onmouseup = () => lex.endVoiceRecording();
 
   // Use events dispatched by the LexFeature to present helpful user messages.
   const { EVENTS } = AwsFeatures.LexFeature;
-  lex.listenTo(EVENTS.lexResponseReady, response =>
+  lex.listenTo(EVENTS.lexResponseReady, (response) =>
     handleLexResponse(response)
   );
   lex.listenTo(EVENTS.recordBegin, () => hideUserMessages());
   lex.listenTo(EVENTS.recordEnd, () => displayProcessingMessage());
 
   // Create convenience references to DOM elements.
-  messageContainerEl = document.getElementById('userMessageContainer');
-  transcriptTextEl = document.getElementById('transcriptText');
+  messageContainerEl = document.getElementById("userMessageContainer");
+  transcriptTextEl = document.getElementById("transcriptText");
 }
 
 /**
@@ -111,34 +114,39 @@ function initConversationManagement() {
  */
 function handleLexResponse(response) {
   // Remove "processing" CSS class from message container.
-  messageContainerEl.classList.remove('processing');
+  messageContainerEl.classList.remove("processing");
 
   // Display the user's speech input transcript.
   displaySpeechInputTranscript(response.inputTranscript);
 
   // Have the host speak the response from Lex if one was provided.
-  if (response.message) {
-    host.TextToSpeechFeature.play(response.message);
-  } else if (response.dialogState === 'ReadyForFulfillment') {
-    host.TextToSpeechFeature.play('OK. Your reservation is complete. Have a great day.');
+  const isIntentConfirmed =
+    response.sessionState.intent.confirmationState === "Confirmed";
+  if (response.messages) {
+    const messageContent = response.messages[0].content;
+    host.TextToSpeechFeature.play(messageContent);
+  } else if (isIntentConfirmed) {
+    host.TextToSpeechFeature.play(
+      "OK. Your reservation is complete. Have a great day."
+    );
     // Wave after a short delay.
     setTimeout(() => {
-      host.GestureFeature.playGesture('Gesture', 'wave');
+      host.GestureFeature.playGesture("Gesture", "wave");
     }, 2000);
   }
 }
 
 function displaySpeechInputTranscript(text) {
   transcriptTextEl.innerText = `“${text}”`;
-  messageContainerEl.classList.add('showingMessage');
+  messageContainerEl.classList.add("showingMessage");
 }
 
 function displayProcessingMessage() {
-  messageContainerEl.classList.add('processing');
+  messageContainerEl.classList.add("processing");
 }
 
 function hideUserMessages() {
-  messageContainerEl.classList.remove('showingMessage');
+  messageContainerEl.classList.remove("showingMessage");
 }
 
 /**
@@ -148,18 +156,18 @@ function hideUserMessages() {
  * denied by the user or browser.
  */
 async function acquireMicrophoneAccess() {
-  showUiScreen('micInitScreen');
+  showUiScreen("micInitScreen");
 
   try {
     await lex.enableMicInput();
-    showUiScreen('startScreen');
+    showUiScreen("startScreen");
   } catch (e) {
     // The user or browser denied mic access. Display appropriate messaging
     // to the user.
-    if (e.message === 'Permission dismissed') {
-      showUiScreen('micPermissionDismissedScreen');
+    if (e.message === "Permission dismissed") {
+      showUiScreen("micPermissionDismissedScreen");
     } else {
-      showUiScreen('micDisabledScreen');
+      showUiScreen("micDisabledScreen");
     }
   }
 }
@@ -171,7 +179,7 @@ async function acquireMicrophoneAccess() {
  * @param {string} id HTMLElement id of the screen to display.
  */
 function showUiScreen(id) {
-  document.querySelectorAll('#uiScreens .screen').forEach(element => {
+  document.querySelectorAll("#uiScreens .screen").forEach((element) => {
     const isTargetScreen = element.id === id;
     setElementVisibility(element.id, isTargetScreen);
   });
@@ -185,9 +193,9 @@ function showUiScreen(id) {
 function setElementVisibility(id, visible) {
   const element = document.getElementById(id);
   if (visible) {
-    element.classList.remove('hide');
+    element.classList.remove("hide");
   } else {
-    element.classList.add('hide');
+    element.classList.add("hide");
   }
 }
 
