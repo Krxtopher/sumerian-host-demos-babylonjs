@@ -1,45 +1,47 @@
-const CopyPlugin = require('copy-webpack-plugin');
-const webpack = require('webpack');
+const CopyPlugin = require("copy-webpack-plugin");
+const webpack = require("webpack");
 
 module.exports = {
-  mode: 'development',
-  devtool: 'source-map',
+  mode: "development",
+  devtool: "source-map",
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: 'assets/**/*.*', context: 'src/' },
-        { from: '*.html', context: 'src/' },
-        { from: '*.css', context: 'src/' },
+        { from: "assets/**/*.*", context: "src/" },
+        { from: "*.html", context: "src/" },
+        { from: "*.css", context: "src/" },
       ],
     }),
   ],
   entry: {
     helloWorldDemo: {
-      import: './src/helloWorldDemo.js',
+      import: "./src/helloWorldDemo.js",
     },
     gesturesDemo: {
-      import: './src/gesturesDemo.js',
+      import: "./src/gesturesDemo.js",
     },
     customCharacterDemo: {
-      import: './src/customCharacterDemo.js',
+      import: "./src/customCharacterDemo.js",
     },
     chatbotDemo: {
-      import: './src/chatbotDemo.js',
+      import: "./src/chatbotDemo.js",
+    },
+    chatbotDemo_LexV2: {
+      import: "./src/chatbotDemo_LexV2.js",
     },
   },
   resolve: {
-    extensions: ['.js'],
+    extensions: [".js"],
   },
-  module: {
-  },
+  module: {},
   output: {
     clean: true,
   },
   devServer: {
-    static: './dist',
+    static: "./dist",
     liveReload: true,
     hot: true,
-    open: '/',
-    watchFiles: ['./src/index.html'],
+    open: "/",
+    watchFiles: ["./src/index.html"],
   },
 };
