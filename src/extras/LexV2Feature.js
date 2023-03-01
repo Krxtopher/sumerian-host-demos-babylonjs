@@ -1,26 +1,23 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 import { Messenger, Utils } from "@amazon-sumerian-hosts/babylon";
+import { downsampleAudio, encodeWAV } from "./AudioUtils";
 import pako from "pako";
 
+const INPUT_AUDIO_SAMPLE_RATE = 16000;
+
 /**
- * The AWS LexRuntime service object.
- * @external LexRuntime
- * @see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/LexRuntime.html
+ * The list of event types emitted by the LexV2Feature.
  */
+const EVENTS = {
+  lexResponseReady: "lexResponseReady",
+  micReady: "micReady",
+  recordBegin: "recordBegin",
+  recordEnd: "recordEnd",
+};
 
 /**
  * Feature class for interacting with Lex V2 chatbots.
- *
- * @property {Object} EVENTS - Built-in messages that the feature emits.
- * @property {string} [EVENTS.lexResponseReady=lexResponseReady] - Message that is emitted after
- * receiving lex response for the input sent
- * @property {string} [EVENTS.micReady=micReady] - Message that is emitted after
- * microphone is ready to use
- * @property {string} [EVENTS.recordBegin=recordBegin] - Message that is emitted after
- * microphone starts recording
- * @property {string} [EVENTS.recordEnd=recordEnd] - Message that is emitted after
- * microphone ends recording
  */
 class LexV2Feature extends Messenger {
   /**
@@ -122,36 +119,23 @@ class LexV2Feature extends Messenger {
       inputStream,
     };
 
-    return new Promise((resolve, reject) => {
-      this._lexRuntime.recognizeUtterance(params, (error, data) => {
-        if (error) {
-          return reject(error);
-        }
-        return resolve(data);
-      });
-    })
+    this._lexRuntime
+      .recognizeUtterance(params)
+      .promise()
       .then((response) => {
         const decodedResponse = decodeResponse(response);
-        this.emit(this.constructor.EVENTS.lexResponseReady, decodedResponse);
+        this.emit(EVENTS.lexResponseReady, decodedResponse);
         return response;
-      })
-      .catch((error) => {
-        const errorMessage = `Error happened during voice recording: ${error}. Please check whether your speech is more than 15s.`;
-        console.error(errorMessage);
-        throw new Error(errorMessage);
       });
   }
 
   _prepareAudio(audioBuffer, sourceSampleRate) {
-    const downsampledAudio = LexUtils.downsampleAudio(
+    const downsampledAudio = downsampleAudio(
       audioBuffer,
       sourceSampleRate,
-      this.constructor.LEX_DEFAULTS.SampleRate
+      INPUT_AUDIO_SAMPLE_RATE
     );
-    const encodedAudio = LexUtils.encodeWAV(
-      downsampledAudio,
-      this.constructor.LEX_DEFAULTS.SampleRate
-    );
+    const encodedAudio = encodeWAV(downsampledAudio, INPUT_AUDIO_SAMPLE_RATE);
 
     return new Blob([encodedAudio], { type: "application/octet-stream" });
   }
@@ -187,7 +171,7 @@ class LexV2Feature extends Messenger {
     source.connect(node);
     node.connect(this._audioContext.destination);
 
-    this.emit(this.constructor.EVENTS.micReady);
+    this.emit(EVENTS.micReady);
     this._micReady = true;
   }
 
@@ -210,7 +194,7 @@ class LexV2Feature extends Messenger {
     this._recBuffer = [];
     this._recording = true;
 
-    this.emit(this.constructor.EVENTS.recordBegin);
+    this.emit(EVENTS.recordBegin);
   }
 
   /**
@@ -233,7 +217,7 @@ class LexV2Feature extends Messenger {
       offset += this._recBuffer[i].length;
     }
 
-    this.emit(this.constructor.EVENTS.recordEnd);
+    this.emit(EVENTS.recordEnd);
     return this._processWithAudio(result, this._audioContext.sampleRate);
   }
 
@@ -245,24 +229,6 @@ class LexV2Feature extends Messenger {
     return "UnknownEngine";
   }
 }
-
-Object.defineProperties(LexV2Feature, {
-  LEX_DEFAULTS: {
-    value: {
-      SampleRate: "16000",
-    },
-    writable: false,
-  },
-  EVENTS: {
-    value: {
-      ...Object.getPrototypeOf(LexV2Feature).EVENTS,
-      lexResponseReady: "lexResponseReady",
-      micReady: "micReady",
-      recordBegin: "recordBegin",
-      recordEnd: "recordEnd",
-    },
-  },
-});
 
 /**
  * Returns a copy of the Lex response, decoding any compressed values. The
@@ -300,118 +266,6 @@ function decodeAndUnzipJsonString(encodedString) {
   const unzippedJsonString = pako.inflate(gzipedDataArray, { to: "string" });
   const result = JSON.parse(unzippedJsonString);
   return result;
-}
-
-/**
- * A collection of useful lex related functions.
- */
-class LexUtils {
-  /**
-   * Downsamples the audio to a target sample rate.
-   *
-   * Inspired by the following blog post from the Lex team:
-   * https://aws.amazon.com/blogs/machine-learning/capturing-voice-input-in-a-browser/
-   *
-   * @param {Float32Array} buffer - Input audio buffer
-   * @param {float} sourceSampleRate - Sample rate of the input audio buffer
-   * @param {float} targetSampleRate - Sample rate to try to convert to
-   *
-   * @return {Float32Array} Downsampled audio buffer
-   */
-  static downsampleAudio(buffer, sourceSampleRate, targetSampleRate) {
-    if (!buffer || !buffer.length) {
-      return;
-    }
-
-    if (sourceSampleRate === targetSampleRate) {
-      return buffer;
-    }
-
-    if (sourceSampleRate < targetSampleRate) {
-      throw Error(
-        `Input Sample rate ${sourceSampleRate} is less than target sample rate ${targetSampleRate}.`
-      );
-    }
-
-    const bufferLength = buffer.length;
-    const sampleRateRatio = sourceSampleRate / targetSampleRate;
-    const newLength = Math.round(bufferLength / sampleRateRatio);
-
-    const downsampledBuffer = new Float32Array(newLength);
-
-    let position = 0;
-    let bufferOffset = 0;
-    while (position < newLength) {
-      const nextBufferOffset = Math.round((position + 1) * sampleRateRatio);
-
-      let accumulator = 0;
-      let count = 0;
-      for (
-        let i = bufferOffset;
-        i < nextBufferOffset && i < bufferLength;
-        i++
-      ) {
-        accumulator += buffer[i];
-        count++;
-      }
-
-      downsampledBuffer[position] = accumulator / count;
-      position++;
-      bufferOffset = nextBufferOffset;
-    }
-
-    return downsampledBuffer;
-  }
-
-  /**
-   * Converts audio data to WAV.
-   *
-   * Inspired by the following blog post from the Lex team:
-   * https://aws.amazon.com/blogs/machine-learning/capturing-voice-input-in-a-browser/
-   *
-   * @param {Float32Array} buffer - Input audio buffer
-   * @param {float} targetSampleRate - Sample rate for the output audio
-   *
-   * @return {DataView} Converted audio data
-   */
-  static encodeWAV(buffer, targetSampleRate) {
-    function _writeString(view, offset, string) {
-      for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
-      }
-    }
-    function _floatTo16BitPCM(view, offset, input) {
-      for (let i = 0; i < input.length; i++, offset += 2) {
-        const s = Math.max(-1, Math.min(1, input[i]));
-        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
-      }
-    }
-
-    if (!buffer) {
-      return;
-    }
-
-    //Insert WAV format related info at the beginning of the buffer up to offset 44
-    const encodedBuffer = new ArrayBuffer(44 + buffer.length * 2);
-    const view = new DataView(encodedBuffer);
-
-    _writeString(view, 0, "RIFF");
-    view.setUint32(4, 32 + buffer.length * 2, true);
-    _writeString(view, 8, "WAVE");
-    _writeString(view, 12, "fmt ");
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, 1, true);
-    view.setUint32(24, targetSampleRate, true);
-    view.setUint32(28, targetSampleRate * 2, true);
-    view.setUint16(32, 2, true);
-    view.setUint16(34, 16, true);
-    _writeString(view, 36, "data");
-    view.setUint32(40, buffer.length * 2, true);
-    _floatTo16BitPCM(view, 44, buffer);
-
-    return view;
-  }
 }
 
 export default LexV2Feature;
