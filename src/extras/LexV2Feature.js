@@ -14,16 +14,21 @@ class LexV2Feature extends Messenger {
   /**
    * @constructor
    *
-   * @param {external:LexRuntime} lexRuntime - A AWS.LexRuntimeV2 instance to use
-   * @param {Object=} options - Options that determine which Lex bot will be used.
-   * @param {string=} options.botId - The ID of the Lex bot to use. Example: "KPJPZUHJU1"
-   *     Note this is *not* the same as the bot's "name".
-   * @param {string=} options.botAliasId - The ID of the Lex bot alias to use. Example: "KTSJZJZJ1E"
-   *     Note this is *not* the same as the alias's "name".
-   * @param {string=} options.localeId - (Optional) The locale ID of the language to use. If you do
-   *     not provide this value, a default of "en_US" will be used.
-   * @param {string=} options.sessionId - (Optional) A unique identifier for the session. If you do
-   *     not provide this value a unique session ID will be used automatically.
+   * @param {external:LexRuntime} lexRuntime - A AWS.LexRuntimeV2 instance to
+   *     use
+   * @param {Object} options - Options that determine which Lex bot will be
+   *     used.
+   * @param {string} options.botId - The ID of the Lex bot to use. Example:
+   *     "KPJPZUHJU1" Note this is *not* the same as the bot's "name".
+   * @param {string} options.botAliasId - The ID of the Lex bot alias to use.
+   *     Example: "KTSJZJZJ1E" Note this is *not* the same as the alias's
+   *     "name".
+   * @param {string=} options.localeId - (Optional) The locale ID of the
+   *     language to use. If you do not provide this value, a default of "en_US"
+   *     will be used.
+   * @param {string=} options.sessionId - (Optional) A unique identifier for the
+   *     session. If you do not provide this value a unique session ID will be
+   *     used automatically.
    */
   constructor(
     lexRuntime,
@@ -41,16 +46,9 @@ class LexV2Feature extends Messenger {
         "Failed to initialize LexV2Feature.The lexRuntime parameter is required"
       );
     }
-    if (lexRuntime.config) {
-      lexRuntime.config.customUserAgent = Utils.addCoreUserAgentComponent(
-        lexRuntime.config.customUserAgent
-      );
-      lexRuntime.config.customUserAgent = Utils.addStringOnlyOnce(
-        lexRuntime.config.customUserAgent,
-        this.getEngineUserAgentString()
-      );
-    }
+
     this._lexRuntime = lexRuntime;
+    this._updateLexUserAgentId();
 
     this._options = {
       botId: options.botId,
@@ -59,7 +57,7 @@ class LexV2Feature extends Messenger {
       sessionId: options.sessionId || Utils.createId(),
     };
 
-    //Microphone related fields
+    // Microphone related fields
     this._micReady = false;
     this._recording = false;
     this._recLength = 0;
@@ -68,7 +66,25 @@ class LexV2Feature extends Messenger {
   }
 
   /**
-   * Setup audio context which will be used for setting up microphone related audio node
+   * Modifies the custom user agent string so calls from this usage metrics
+   * can be tracked.
+   */
+  _updateLexUserAgentId() {
+    const config = this._lexRuntime.config;
+
+    let modifiedUserAgent = config.customUserAgent;
+    modifiedUserAgent = Utils.addCoreUserAgentComponent(modifiedUserAgent);
+    modifiedUserAgent = Utils.addStringOnlyOnce(
+      modifiedUserAgent,
+      this.getEngineUserAgentString()
+    );
+
+    config.customUserAgent = modifiedUserAgent;
+  }
+
+  /**
+   * Setup audio context which will be used for setting up microphone related
+   * audio node
    */
   _setupAudioContext() {
     this._audioContext = new AudioContext();
@@ -82,10 +98,12 @@ class LexV2Feature extends Messenger {
    * @param {Object=} config - Optional config for overriding lex bot info
    * @param {string=} config.botName - The name of the lex bot.
    * @param {string=} config.botAlias - The alias of the lex bot.
-   * @param {string=} config.userId - The userId used to keep track of the session with lex bot.
+   * @param {string=} config.userId - The userId used to keep track of the
+   * session with lex bot.
    *
-   * @returns {Promise} A Promise-like object that resolves to a Lex response object.
-   * For details on the structure of that response object see: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/LexRuntime.html#postContent-property
+   * @returns {Promise} A Promise-like object that resolves to a Lex response
+   * object. For details on the structure of that response object see:
+   * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/LexRuntime.html#postContent-property
    */
   _processWithAudio(inputAudio, sourceSampleRate, config = {}) {
     const audio = this._prepareAudio(inputAudio, sourceSampleRate);
@@ -95,8 +113,9 @@ class LexV2Feature extends Messenger {
   /**
    * Sends text user input to Amazon Lex.
    *
-   * @returns {Promise} A Promise-like object that resolves to a Lex response object.
-   * For details on the structure of that response object see: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/LexRuntime.html#postContent-property
+   * @returns {Promise} A Promise-like object that resolves to a Lex response
+   * object. For details on the structure of that response object see:
+   * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/LexRuntime.html#postContent-property
    */
   processWithText(inputText) {
     return this._process("text/plain; charset=utf-8", inputText);
@@ -121,7 +140,8 @@ class LexV2Feature extends Messenger {
       .catch((error) => {
         if (error.name === "ResourceNotFoundException") {
           console.error(
-            `A LexV2 bot matching the following configuration was not found. Please check your configuration.
+            `A LexV2 bot matching the following configuration was not found. ` +
+              `Please check your configuration.
 {
   botId: ${this._options.botId},
   botAliasId: ${this._options.botAliasId},
@@ -147,10 +167,10 @@ class LexV2Feature extends Messenger {
   }
 
   /**
-   * Async function to setup microphone recorder which will get user permission for accessing microphone
-   * This method must be called before attempting to record voice input with the
-   * beginVoiceRecording() method. Expect an error to be thrown if the user has
-   * chosen to block microphone access.
+   * Async function to setup microphone recorder which will get user permission
+   * for accessing microphone This method must be called before attempting to
+   * record voice input with the beginVoiceRecording() method. Expect an error
+   * to be thrown if the user has chosen to block microphone access.
    *
    * @throws {DOMException} See the documentation for
    * [MediaDevices.getUserMedia()](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
@@ -182,8 +202,9 @@ class LexV2Feature extends Messenger {
   }
 
   /**
-   * Begin microphone recording. This function will also try to resume audioContext so that
-   * it's suggested to call this function after a user interaction
+   * Begin microphone recording. This function will also try to resume
+   * audioContext so that it's suggested to call this function after a user
+   * interaction
    */
   beginVoiceRecording() {
     if (!this._micReady) {
@@ -206,8 +227,9 @@ class LexV2Feature extends Messenger {
   /**
    * Stop microphone recording and send recorded audio data to lex.
    *
-   * @returns {Promise} A Promise-like object that resolves to a Lex response object.
-   * For details on the structure of that response object see: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/LexRuntime.html#postContent-property
+   * @returns {Promise} A Promise-like object that resolves to a Lex response
+   * object. For details on the structure of that response object see:
+   * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/LexRuntime.html#postContent-property
    */
   endVoiceRecording() {
     if (!this._recording) {
@@ -228,14 +250,15 @@ class LexV2Feature extends Messenger {
   }
 
   /**
-   *
-   * @returns The useragent string for the engine you are using, e.g. 'babylonjs/5.1.0'
+   * @returns The useragent string for the engine you are using, e.g.
+   * 'babylonjs/5.1.0'
    */
   getEngineUserAgentString() {
     return Engine.NpmPackage;
   }
 }
 
+// Define static class properties.
 Object.defineProperties(LexV2Feature, {
   EVENTS: {
     value: {
@@ -253,23 +276,18 @@ Object.defineProperties(LexV2Feature, {
  * original response object is not modified.
  */
 function decodeResponse(lexResponse) {
-  const decodedResponse = { ...lexResponse };
+  let { sessionState, inputTranscript, messages } = lexResponse;
 
-  decodedResponse.sessionState = decodeAndUnzipJsonString(
-    lexResponse.sessionState
-  );
+  sessionState = decodeAndUnzipJsonString(sessionState);
+  inputTranscript = decodeAndUnzipJsonString(inputTranscript);
+  messages = decodeAndUnzipJsonString(messages);
 
-  if (lexResponse.inputTranscript) {
-    decodedResponse.inputTranscript = decodeAndUnzipJsonString(
-      lexResponse.inputTranscript
-    );
-  }
-
-  if (lexResponse.messages) {
-    decodedResponse.messages = decodeAndUnzipJsonString(lexResponse.messages);
-  }
-
-  return decodedResponse;
+  return {
+    ...lexResponse,
+    sessionState,
+    inputTranscript,
+    messages,
+  };
 }
 
 /**
@@ -277,7 +295,8 @@ function decodeResponse(lexResponse) {
  * a parsed JSON object.
  */
 function decodeAndUnzipJsonString(encodedString) {
-  if (encodedString === undefined) return undefined;
+  if (typeof encodedString !== "string" || encodedString.length === 0)
+    return null;
 
   const data = atob(encodedString);
   const gzipedDataArray = Uint8Array.from(data, (c) => c.charCodeAt(0));
