@@ -1,6 +1,8 @@
 # Amazon Sumerian Host Babylon.js Demos
 
-This directory contains a number of demonstrations, each focused on a different feature of the Hosts API.
+This repository contains updated versions of the official Amazon Sumerian Hosts Babylon.JS demos found in the [Amazon Sumerian Hosts GitHub repository](https://github.com/aws-samples/amazon-sumerian-hosts). The demos here are easier to run and easier to deploy to your own web server. This makes them a great starting point for your own custom Sumerian Host applications.
+
+This repository contains a number of demonstrations, each focused on a different feature of the Sumerian Hosts API. You can see 📺 [videos of each of these demos in action here](https://www.youtube.com/playlist?list=PLjTvNeo5ylIYvVvIbCL8VkZruf4M0XkUB).
 
 ![Amazon Sumerian Host characters](./docs/images/hosts_cover.jpg)
 
