@@ -17,18 +17,6 @@ module.exports = {
     helloWorldDemo: {
       import: "./src/helloWorldDemo.js",
     },
-    gesturesDemo: {
-      import: "./src/gesturesDemo.js",
-    },
-    customCharacterDemo: {
-      import: "./src/customCharacterDemo.js",
-    },
-    chatbotDemo: {
-      import: "./src/chatbotDemo.js",
-    },
-    chatbotDemo_LexV2: {
-      import: "./src/chatbotDemo_LexV2.js",
-    },
   },
   resolve: {
     extensions: [".js"],

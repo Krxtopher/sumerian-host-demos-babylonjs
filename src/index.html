@@ -1,44 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BabylonJS Sumerian Host Demos</title>
-    <link rel="stylesheet" href="index.css" />
-  </head>
-  <body>
-    <h1>BabylonJS Sumerian Hosts Demos</h1>
-    <div class="exampleList">
-      <div class="example">
-        <h2 class="title">
-          <a class="demo-link" href="helloWorldDemo.html">Hello World Demo</a>
-        </h2>
-      </div>
-      <div class="example">
-        <h2 class="title">
-          <a class="demo-link" href="gesturesDemo.html">Gestures Demo</a>
-        </h2>
-      </div>
-      <div class="example">
-        <h2 class="title">
-          <a class="demo-link" href="customCharacterDemo.html"
-            >Custom Character Demo</a
-          >
-        </h2>
-      </div>
-      <div class="example">
-        <h2 class="title">
-          <a class="demo-link" href="chatbotDemo.html">Chatbot Demo (Lex v1)</a>
-        </h2>
-      </div>
-      <div class="example">
-        <h2 class="title">
-          <a class="demo-link" href="chatbotDemo_LexV2.html"
-            >Chatbot Demo (Lex v2)</a
-          >
-        </h2>
-      </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hello World Demo</title>
+
+  <link rel="stylesheet" href="helloWorldDemo.css" />
+
+  <!-- Sumerian Host dependencies -->
+  <script type="text/javascript" src="https://sdk.amazonaws.com/js/aws-sdk-2.1328.0.min.js"></script>
+
+  <!-- Demo logic -->
+  <script type="module" src="helloWorldDemo.js"></script>
+</head>
+
+<body>
+  <div id="mainScreen" class="screen loading">
+    <canvas id="renderCanvas"></canvas>
+
+    <div id="uiPanel" class="panel">
+      <textarea id="promptInput" rows="8">Explain the Turing test in just a few sentences. Do it in a way a 5 year old can understand.</textarea>
+      <button id="submitButton">Submit Prompt</button>
     </div>
-  </body>
+  </div>
+  </div>
+
+  <div id="loadingScreen" class="screen">
+    <p>Loading...</p>
+  </div>
+</body>
+
 </html>

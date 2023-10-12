@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "paths": {
+    "/generateText": {
+      "name": "/generateText",
+      "lambdaFunction": "BedrockCharacterDemoGenerateText",
+      "permissions": {
+        "setting": "open"
+      }
+    }
+  }
+}

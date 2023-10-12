@@ -1,0 +1,32 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-bedrockcharacterdemo-dev-172749-authRole",
+      "UnauthRoleArn": "arn:aws:iam::471170451931:role/amplify-bedrockcharacterdemo-dev-172749-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::471170451931:role/amplify-bedrockcharacterdemo-dev-172749-authRole",
+      "Region": "us-west-2",
+      "DeploymentBucketName": "amplify-bedrockcharacterdemo-dev-172749-deployment",
+      "UnauthRoleName": "amplify-bedrockcharacterdemo-dev-172749-unauthRole",
+      "StackName": "amplify-bedrockcharacterdemo-dev-172749",
+      "StackId": "arn:aws:cloudformation:us-west-2:471170451931:stack/amplify-bedrockcharacterdemo-dev-172749/2df10f60-6896-11ee-ac12-06c5888d1dcd",
+      "AmplifyAppId": "dho3gjyn3qr24"
+    },
+    "categories": {
+      "hosting": {
+        "amplifyhosting": {
+          "appId": "dho3gjyn3qr24",
+          "type": "manual"
+        }
+      },
+      "function": {
+        "BedrockCharacterDemoGenerateText": {
+          "deploymentBucketName": "amplify-bedrockcharacterdemo-dev-172749-deployment",
+          "s3Key": "amplify-builds/BedrockCharacterDemoGenerateText-2f43663666514b497777-build.zip"
+        }
+      },
+      "api": {
+        "textGenAPI": {}
+      }
+    }
+  }
+}

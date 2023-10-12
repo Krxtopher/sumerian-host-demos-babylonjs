@@ -20,6 +20,7 @@
     "@babylonjs/core": "^4.2.1",
     "@babylonjs/loaders": "^4.2.1",
     "@babylonjs/materials": "^4.2.1",
+    "aws-amplify": "^5.3.11",
     "pako": "^2.1.0"
   },
   "devDependencies": {
